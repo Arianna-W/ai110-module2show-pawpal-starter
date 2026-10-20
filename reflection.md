@@ -72,8 +72,7 @@
 - Describe one tradeoff your scheduler makes.
 - Why is that tradeoff reasonable for this scenario?
 
-- One tradeoff is that scheduled time takes precedence over priority: an earlier task appears first even if a later task has a higher priority.
-- This is reasonable because some care activities, such as medication, may need to happen at intended times. Priority still helps order tasks scheduled for the same time. 
+- The scheduler checks each pair of scheduled tasks for overlaps instead of using a more complex scheduling method. This is reasonable because a pet owner's daily schedule is small, so the check is easy to understand and works well. It does not account for tasks without a start time, travel time, or tasks that cross midnight.
 
 ---
 
@@ -92,7 +91,7 @@
 - Describe one moment where you did not accept an AI suggestion as-is.
 - How did you evaluate or verify what the AI suggested?
 
-- When I first as AI to review my skeleton it gave me suggestions that were more complex than I wanted. I then had to ask AI to simplify the changes it wanted to make, because I wanted to make sure I can understand the code it was trying to add. I verified that I was able to understand all the suggestions and the reasoinings behind them.
+- When I first as AI to review my skeleton it gave me suggestions that were more complex than I wanted. I then had to ask AI to simplify the changes it wanted to make, because I wanted to make sure I can understand the code it was trying to add. I verified that I was able to understand all the suggestions and the reasoinings behind them
 
 ---
 

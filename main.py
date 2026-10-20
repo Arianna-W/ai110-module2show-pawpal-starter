@@ -12,11 +12,11 @@ def main() -> None:
 
 	mochi.add_task(
 		Task.create_task(
-			name="Breakfast",
-			description="Serve Mochi's morning meal",
-			duration=10,
-			priority=2,
-			scheduled_start=time(7, 30),
+			name="Medication",
+			description="Give Mochi the prescribed medicine",
+			duration=5,
+			priority=1,
+			scheduled_start=time(18, 0),
 			frequency="daily",
 		)
 	)
@@ -26,17 +26,17 @@ def main() -> None:
 			description="Walk around the neighborhood",
 			duration=25,
 			priority=3,
-			scheduled_start=time(8, 0),
+			scheduled_start=time(7, 30),
 			frequency="daily",
 		)
 	)
 	mochi.add_task(
 		Task.create_task(
-			name="Medication",
-			description="Give Mochi the prescribed medicine",
-			duration=5,
-			priority=1,
-			scheduled_start=time(18, 0),
+			name="Breakfast",
+			description="Serve Mochi's morning meal",
+			duration=10,
+			priority=2,
+			scheduled_start=time(7, 30),
 			frequency="daily",
 		)
 	)
@@ -58,6 +58,10 @@ def main() -> None:
 			f"{start_time} | {pet_name} | {task.name}: {task.description} "
 			f"({task.duration} min, priority {task.priority})"
 		)
+	if scheduler.conflict_warnings:
+		print("\nWarnings")
+		for warning in scheduler.conflict_warnings:
+			print(warning)
 
 
 if __name__ == "__main__":

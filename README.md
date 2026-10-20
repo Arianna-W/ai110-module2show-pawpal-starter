@@ -78,12 +78,12 @@ Sample test output:
 
 > Fill in once you've implemented scheduling logic.
 
-| Feature | Method(s) | Notes |
-|---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+| Feature | Method(s) | Behavior |
+|---------|-----------|----------|
+| Sorting | `Scheduler.sort_by_time()` | Orders tasks by scheduled start time, puts tasks without a start time last, and uses higher priority to break ties. |
+| Filtering | `Scheduler.filter_tasks()` | Filters by completion status, pet name, or both. Pet names are matched exactly without case sensitivity. |
+| Conflict detection | `Scheduler.detect_conflicts()` | Checks scheduled task start times and durations for overlaps, returning warning messages instead of stopping schedule generation. Tasks without a start time are skipped. `Scheduler.create_daily_schedule()` stores these messages in `conflict_warnings`. |
+| Recurring tasks | `Scheduler.mark_task_completed()` | Completing a daily or weekly task creates a new task instance due one or seven days later. `Scheduler.create_daily_schedule()` leaves future-dated instances out until they are due. |
 
 ## 📸 Demo Walkthrough
 
