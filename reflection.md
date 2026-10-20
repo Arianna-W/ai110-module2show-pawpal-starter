@@ -2,15 +2,58 @@
 
 ## 1. System Design
 
-**a. Initial design**
+**a. Initial design** 
 
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
+
+  User should be able to:
+    - Track feeding
+    - Get reminders for medicine
+    - Book a Groomer/Grooming services
+
+  Objects(Attributes): 
+    - Owner 
+        - Name
+        - Address
+    - Pet
+        - Name
+        - Age
+        - Type of pet
+            - Breed
+    - Task
+        - Name
+        - Description
+        - Duration
+        - Priority at minimum
+    - Planner 
+        - Daily Plan/Schedule
+        - Constraints
+        - Priorities
+        - Reasoning
+    
+    Objects(Methods):
+    - Owner
+        - Add owner information
+        - Add pet information
+    - Task
+        - Create a new task
+        - Edit a task
+        - Delete a task
+    - Planner 
+        - Create a Daily Plan/Schedule
+            - Consider Constraints
+            - Consider Priorities
+        - Provide Reasoning
+        - Display
 
 **b. Design changes**
 
 - Did your design change during implementation?
 - If yes, describe at least one change and why you made it.
+
+- I made many changes due to Claude pointing many issues in my skeleton design. My skeleton class was missing two relationships. My uml design says owner owns pets and pets have care tasks, but in my skeleton owner had no pets field and pet had no task fields. The add_pet_information method had no collection to update. The Tasks methods were missing many details, such as parameters and correct return types.
+
 
 ---
 
