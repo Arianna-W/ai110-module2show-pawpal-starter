@@ -86,6 +86,38 @@ def test_pet_add_task_increases_task_count():
 	assert len(pet.tasks) == initial_task_count + 1
 
 
+def test_owner_add_pet_and_collect_tasks_without_duplicates():
+	owner = Owner(name="Jordan", address="123 Paw Street")
+	pet = Pet(name="Mochi", age=3, pet_type="cat", breed="Tabby")
+	task = Task.create_task(
+		name="Breakfast", description="Serve breakfast", duration=10, priority=2,
+	)
+	pet.add_task(task)
+
+	owner.add_pet_information(pet)
+	owner.add_pet_information(pet)
+
+	assert owner.pets == [pet]
+	assert owner.get_all_tasks() == [task]
+
+
+def test_task_edit_and_delete():
+	pet = Pet(name="Mochi", age=3, pet_type="cat", breed="Tabby")
+	task = Task.create_task(
+		name="Breakfast", description="Serve breakfast", duration=10, priority=2,
+	)
+	pet.add_task(task)
+
+	task.edit_task("Brunch", "Serve a later meal", 15, 3)
+
+	assert (task.name, task.description, task.duration, task.priority) == (
+		"Brunch", "Serve a later meal", 15, 3
+	)
+	task.delete_task(pet)
+
+	assert pet.tasks == []
+
+
 def test_scheduler_sort_by_time_orders_tasks_and_puts_unscheduled_last():
 	owner = Owner(name="Jordan", address="123 Paw Street")
 	pet = Pet(name="Mochi", age=3, pet_type="cat", breed="Tabby")
@@ -107,6 +139,34 @@ def test_scheduler_sort_by_time_orders_tasks_and_puts_unscheduled_last():
 	scheduler = Scheduler(owner)
 
 	assert scheduler.sort_by_time() == [early_task, late_task, unscheduled_task]
+
+
+def test_daily_schedule_excludes_completed_and_future_tasks():
+	owner = Owner(name="Jordan", address="123 Paw Street")
+	pet = Pet(name="Mochi", age=3, pet_type="cat", breed="Tabby")
+	today = date.today()
+	due_today = Task.create_task(
+		name="Breakfast", description="Serve breakfast", duration=10,
+		priority=2, scheduled_start=time(8, 0), due_date=today,
+	)
+	no_due_date = Task.create_task(
+		name="Walk", description="Take a walk", duration=20, priority=2,
+		scheduled_start=time(9, 0),
+	)
+	completed = Task.create_task(
+		name="Medication", description="Give medicine", duration=5,
+		priority=3, completed=True,
+	)
+	future = Task.create_task(
+		name="Grooming", description="Brush coat", duration=15, priority=1,
+		due_date=today + timedelta(days=1),
+	)
+	for task in (future, completed, no_due_date, due_today):
+		pet.add_task(task)
+	owner.add_pet_information(pet)
+	scheduler = Scheduler(owner)
+
+	assert scheduler.create_daily_schedule() == [due_today, no_due_date]
 
 
 def test_scheduler_detects_overlapping_tasks_with_warning():
@@ -138,6 +198,30 @@ def test_scheduler_detects_overlapping_tasks_with_warning():
 		"Warning: 'Breakfast' overlaps with 'Medication'."
 	]
 	assert scheduler.conflict_warnings == scheduler.detect_conflicts(schedule)
+
+
+def test_scheduler_detects_tasks_with_duplicate_start_times():
+	owner = Owner(name="Jordan", address="123 Paw Street")
+	pet = Pet(name="Mochi", age=3, pet_type="cat", breed="Tabby")
+	breakfast = Task.create_task(
+		name="Breakfast", description="Serve breakfast", duration=10,
+		priority=2, scheduled_start=time(8, 0),
+	)
+	medication = Task.create_task(
+		name="Medication", description="Give medicine", duration=5,
+		priority=3, scheduled_start=time(8, 0),
+	)
+	pet.add_task(breakfast)
+	pet.add_task(medication)
+	owner.add_pet_information(pet)
+	scheduler = Scheduler(owner)
+
+	schedule = scheduler.create_daily_schedule()
+
+	assert schedule == [medication, breakfast]
+	assert scheduler.conflict_warnings == [
+		"Warning: 'Medication' overlaps with 'Breakfast'."
+	]
 
 
 def test_scheduler_filter_tasks_by_completion_and_pet_name():

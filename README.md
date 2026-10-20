@@ -48,8 +48,6 @@ pip install -r requirements.txt
 
 ## 🖥️ Sample Output
 
-Paste a sample of your app's CLI or Streamlit output here so a reader can see what a generated plan looks like:
-
 ```
 Today's Schedule
 ----------------
@@ -71,8 +69,19 @@ pytest --cov
 Sample test output:
 
 ```
-# Paste your pytest output here
+===================================== test session starts ======================================
+platform win32 -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\ari14\Desktop\codepath\ai110-module2show-pawpal-starter
+plugins: anyio-4.15.1
+collected 11 items                                                                              
+
+tests\test_pawpal.py ...........                                                          [100%]
+
+====================================== 11 passed in 0.07s ======================================
+
 ```
+
+Confidence Level: 4/5 stars. All 11 tests pass, covering core task and owner behavior, schedule ordering, recurrence, filtering, and conflict detection. This is solid confidence in the tested logic, though it is not a substitute for broader integration testing or a coverage report.
 
 ## 📐 Smarter Scheduling
 
