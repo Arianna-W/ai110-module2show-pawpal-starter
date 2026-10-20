@@ -1,6 +1,19 @@
 from datetime import date, time, timedelta
 
 from pawpal_system import Owner, Pet, Scheduler, Task
+from pawpal_formatting import format_priority, format_status, format_task_name
+
+
+def test_formatting_helpers_add_task_type_priority_and_status_indicators():
+	assert format_task_name("Morning walk") == "🚶 Morning walk"
+	assert format_task_name("Medication") == "💊 Medication"
+	assert format_task_name("Breakfast") == "🍽️ Breakfast"
+	assert format_task_name("Uncategorized") == "🐾 Uncategorized"
+	assert format_priority("High") == "🔴 High"
+	assert format_priority("Medium") == "🟡 Medium"
+	assert format_priority("Low") == "🟢 Low"
+	assert format_status(True) == "✅ Completed"
+	assert format_status(False) == "🟠 To do"
 
 
 def test_scheduler_mark_task_completed_updates_task_status():
@@ -101,6 +114,42 @@ def test_owner_add_pet_and_collect_tasks_without_duplicates():
 	assert owner.get_all_tasks() == [task]
 
 
+def test_owner_json_round_trip_preserves_pets_and_task_fields(tmp_path):
+	owner = Owner(name="Jordan", address="123 Paw Street")
+	mochi = Pet(name="Mochi", age=3, pet_type="cat", breed="Tabby")
+	biscuit = Pet(name="Biscuit", age=5, pet_type="dog", breed="Poodle")
+	completed_task = Task.create_task(
+		name="Medication",
+		description="Give the evening dose",
+		duration=5,
+		priority=3,
+		scheduled_start=time(18, 15),
+		frequency="weekly",
+		completed=True,
+		due_date=date(2026, 10, 18),
+	)
+	unscheduled_task = Task.create_task(
+		name="Walk",
+		description="Take a short walk",
+		duration=20,
+		priority=2,
+	)
+	mochi.add_task(completed_task)
+	biscuit.add_task(unscheduled_task)
+	owner.add_pet_information(mochi)
+	owner.add_pet_information(biscuit)
+	file_path = tmp_path / "data.json"
+
+	owner.save_to_json(file_path)
+	loaded_owner = Owner.load_from_json(file_path)
+
+	assert loaded_owner == owner
+	assert loaded_owner.pets[0].tasks[0].scheduled_start == time(18, 15)
+	assert loaded_owner.pets[0].tasks[0].due_date == date(2026, 10, 18)
+	assert loaded_owner.pets[1].tasks[0].scheduled_start is None
+	assert loaded_owner.pets[1].tasks[0].due_date is None
+
+
 def test_task_edit_and_delete():
 	pet = Pet(name="Mochi", age=3, pet_type="cat", breed="Tabby")
 	task = Task.create_task(
@@ -116,6 +165,16 @@ def test_task_edit_and_delete():
 	task.delete_task(pet)
 
 	assert pet.tasks == []
+
+
+def test_task_priority_level_labels():
+	tasks = [
+		Task.create_task("Low", "", 1, 1),
+		Task.create_task("Medium", "", 1, 2),
+		Task.create_task("High", "", 1, 3),
+	]
+
+	assert [task.priority_level for task in tasks] == ["Low", "Medium", "High"]
 
 
 def test_scheduler_sort_by_time_orders_tasks_and_puts_unscheduled_last():
@@ -139,6 +198,38 @@ def test_scheduler_sort_by_time_orders_tasks_and_puts_unscheduled_last():
 	scheduler = Scheduler(owner)
 
 	assert scheduler.sort_by_time() == [early_task, late_task, unscheduled_task]
+
+
+def test_scheduler_sort_by_priority_then_time():
+	owner = Owner(name="Jordan", address="123 Paw Street")
+	pet = Pet(name="Mochi", age=3, pet_type="cat", breed="Tabby")
+	low_priority = Task.create_task(
+		name="Breakfast", description="Serve breakfast", duration=10,
+		priority=1, scheduled_start=time(7, 0),
+	)
+	medium_priority = Task.create_task(
+		name="Walk", description="Take a walk", duration=20,
+		priority=2, scheduled_start=time(8, 0),
+	)
+	high_priority_late = Task.create_task(
+		name="Medication", description="Give medicine", duration=5,
+		priority=3, scheduled_start=time(9, 0),
+	)
+	high_priority_early = Task.create_task(
+		name="Water", description="Refresh water", duration=2,
+		priority=3, scheduled_start=time(8, 30),
+	)
+	for task in (low_priority, medium_priority, high_priority_late, high_priority_early):
+		pet.add_task(task)
+	owner.add_pet_information(pet)
+	scheduler = Scheduler(owner)
+
+	assert scheduler.sort_by_time() == [
+		high_priority_early,
+		high_priority_late,
+		medium_priority,
+		low_priority,
+	]
 
 
 def test_daily_schedule_excludes_completed_and_future_tasks():
@@ -246,6 +337,7 @@ def test_scheduler_filter_tasks_by_completion_and_pet_name():
 	owner.add_pet_information(biscuit)
 	scheduler = Scheduler(owner)
 
+	assert scheduler.filter_tasks() == [completed_task, pending_task, other_pet_task]
 	assert scheduler.filter_tasks(completed=False) == [pending_task, other_pet_task]
 	assert scheduler.filter_tasks(pet_name="MOCHI") == [completed_task, pending_task]
 	assert scheduler.filter_tasks(completed=True, pet_name="mochi") == [completed_task]
