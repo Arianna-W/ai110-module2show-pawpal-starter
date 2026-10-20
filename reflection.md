@@ -64,10 +64,16 @@
 - What constraints does your scheduler consider (for example: time, priority, preferences)?
 - How did you decide which constraints mattered most?
 
+- My scheduler considers whether a task is completed, its scheduled start time, and its numeric priority. Completed tasks are excluded, timed tasks are ordered earliest first, and unscheduled tasks come after them. If two tasks have the same time, the higher-priority task comes first.
+- I prioritized completion status first so finished care tasks do not appear again, then scheduled time so tasks are shown when they are intended to happen. Priority is a tie-breaker because the current scheduler does not yet model time availability or resolve conflicts. Task duration and frequency are stored, but preferences and recurring schedules are not yet enforced.
+
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
 - Why is that tradeoff reasonable for this scenario?
+
+- One tradeoff is that scheduled time takes precedence over priority: an earlier task appears first even if a later task has a higher priority.
+- This is reasonable because some care activities, such as medication, may need to happen at intended times. Priority still helps order tasks scheduled for the same time. 
 
 ---
 
@@ -78,10 +84,15 @@
 - How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
 - What kinds of prompts or questions were most helpful?
 
+- When working on the skeleton AI was very helpful. Claude was able to point out many things I missed. I was missing some relationships and some fields. It also pointed out I did not set the data types for my attribute, which I was then able to fix. It helped me refactor my classes to implement the relationships. The fix changed my methods to correctly implement the methods so that the owner had a pet field and the pet have a tasks field. Claude also helped me as a code reviewer for me and was able to help me check that all required implementations were correct.
+- The uml design prompt was helpful since it helped me visualize my proposed design in a fast way. My prompts to check if my implementation were correct was helpful in mitigating issues.
+
 **b. Judgment and verification**
 
 - Describe one moment where you did not accept an AI suggestion as-is.
 - How did you evaluate or verify what the AI suggested?
+
+- When I first as AI to review my skeleton it gave me suggestions that were more complex than I wanted. I then had to ask AI to simplify the changes it wanted to make, because I wanted to make sure I can understand the code it was trying to add. I verified that I was able to understand all the suggestions and the reasoinings behind them.
 
 ---
 
