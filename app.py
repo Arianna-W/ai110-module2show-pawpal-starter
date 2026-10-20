@@ -1,6 +1,7 @@
 import streamlit as st
 from datetime import time
 from pawpal_system import Owner, Pet, Scheduler, Task
+from pawpal_formatting import format_priority, format_status, format_task_name
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
 
@@ -46,7 +47,10 @@ pet_name = st.text_input("Pet name", value="Mochi")
 species = st.selectbox("Species", ["dog", "cat", "other"])
 
 if "owner" not in st.session_state:
-    st.session_state["owner"] = Owner(name=owner_name, address="")
+    try:
+        st.session_state["owner"] = Owner.load_from_json()
+    except FileNotFoundError:
+        st.session_state["owner"] = Owner(name=owner_name, address="")
 
 owner = st.session_state["owner"]
 
@@ -68,6 +72,7 @@ if st.button("Add pet"):
         breed=pet_breed,
     )
     owner.add_pet_information(pet)
+    owner.save_to_json()
     st.session_state["schedule"] = None
 
 if owner.pets:
@@ -104,6 +109,7 @@ if owner.pets:
             scheduled_start=scheduled_start,
         )
         selected_pet.add_task(task)
+        owner.save_to_json()
         st.session_state["schedule"] = None
         st.success(f"Added '{task.name}' to {selected_pet.name}'s care tasks.")
 
@@ -118,32 +124,39 @@ if owner.pets:
         "To do": False,
         "Completed": True,
     }[completion_filter]
-    visible_tasks = scheduler.filter_tasks(
-        completed=completed_filter,
-        pet_name=selected_pet.name,
-    )
+    visible_tasks = scheduler.filter_tasks(completed=completed_filter)
     visible_tasks = scheduler.sort_by_time(visible_tasks)
 
     if visible_tasks:
         st.table(
             [
                 {
-                    "Care task": task.name,
+                    "Pet": next(
+                        pet.name
+                        for pet in owner.pets
+                        if any(pet_task is task for pet_task in pet.tasks)
+                    ),
+                    "Care task": format_task_name(task.name),
                     "Description": task.description or "-",
                     "Duration (min)": task.duration,
-                    "Priority": task.priority,
+                    "Priority": format_priority(task.priority_level),
                     "Start time": (
                         task.scheduled_start.strftime("%I:%M %p").lstrip("0")
                         if task.scheduled_start
                         else "Not scheduled"
                     ),
-                    "Status": "Completed" if task.completed else "To do",
+                    "Status": format_status(task.completed),
                 }
                 for task in visible_tasks
             ]
         )
     else:
-        st.info(f"No {completion_filter.lower()} tasks for {selected_pet.name}.")
+        empty_message = (
+            "No tasks have been added yet."
+            if completion_filter == "All"
+            else f"No {completion_filter.lower()} tasks have been added yet."
+        )
+        st.info(empty_message)
 
 st.divider()
 
@@ -177,9 +190,9 @@ if owner.pets:
                             ),
                             "Unknown pet",
                         ),
-                        "Care task": task.name,
+                        "Care task": format_task_name(task.name),
                         "Duration (min)": task.duration,
-                        "Priority": task.priority,
+                        "Priority": format_priority(task.priority_level),
                         "Start time": (
                             task.scheduled_start.strftime("%I:%M %p").lstrip("0")
                             if task.scheduled_start
