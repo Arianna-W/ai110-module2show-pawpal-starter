@@ -83,7 +83,7 @@
 - How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
 - What kinds of prompts or questions were most helpful?
 
-- When working on the skeleton AI was very helpful. Claude was able to point out many things I missed. I was missing some relationships and some fields. It also pointed out I did not set the data types for my attribute, which I was then able to fix. It helped me refactor my classes to implement the relationships. The fix changed my methods to correctly implement the methods so that the owner had a pet field and the pet have a tasks field. Claude also helped me as a code reviewer for me and was able to help me check that all required implementations were correct.
+- I used Claude and Copilot to help with system design, code review, and documentation.  When working on the skeleton AI was very helpful. Claude was able to point out many things I missed. I was missing some relationships and some fields. It also pointed out I did not set the data types for my attribute, which I was then able to fix. It helped me refactor my classes to implement the relationships. The fix changed my methods to correctly implement the methods so that the owner had a pet field and the pet have a tasks field. Claude also helped me as a code reviewer for me and was able to help me check that all required implementations were correct.
 - The uml design prompt was helpful since it helped me visualize my proposed design in a fast way. My prompts to check if my implementation were correct was helpful in mitigating issues.
 
 **b. Judgment and verification**
@@ -107,6 +107,11 @@
 - How confident are you that your scheduler works correctly?
 - What edge cases would you test next if you had more time?
 
+- I tested adding pets and tasks, preventing the same pet from being added twice, collecting an owner’s tasks, and editing and deleting tasks. These tests check that the basic data relationships and task operations work. I tested schedule sorting, including placing unscheduled tasks last and using priority to break ties. I also checked that completed and future-dated tasks are excluded while tasks due today or without a due date are included. I tested filtering tasks by completion status and pet name, detecting overlapping tasks (including tasks with the same start time), and creating the next daily or weekly task after completion.
+These tests matter because they cover the main scheduling rules and common actions that the app depends on. The current test suite has 11 tests and has passed.
+
+- I am fairly confident in the behaviors covered by the tests, but the test suite does not cover every possible schedule or edge case. If I had more time, I would test tasks that end exactly when another begins, tasks that cross midnight, overdue tasks, and attempts to complete a task that does not belong to the owner. I would also test that completing an already-completed recurring task does not create another occurrence.
+
 ---
 
 ## 5. Reflection
@@ -115,10 +120,16 @@
 
 - What part of this project are you most satisfied with?
 
+- I’m most satisfied that I turned the initial class design into a working system where owners can manage pets and their care tasks, and the scheduler can build an ordered daily plan. It has been a long time since I started a project from almost scratch to a working product. I am happy I went through all development stages from design to logic to UI to testing. 
+
 **b. What you would improve**
 
 - If you had another iteration, what would you improve or redesign?
 
+- If I had another iteration, I would improve the scheduler so it could do more than warn about overlapping tasks. It could use task duration and the owner’s available time to suggest better start times. I would also add UI controls for marking tasks complete and setting due dates and recurrence, since those behaviors currently exist only in the scheduler logic. 
+
 **c. Key takeaway**
 
 - What is one important thing you learned about designing systems or working with AI on this project?
+
+- I learned how useful AI can be when it comes to designing systems. A quick request is able to make a diagrahm that it would probably take me a long time to make. Also, using AI to review my code allowed me to catch mistake and errors before they became a bigger issue.
