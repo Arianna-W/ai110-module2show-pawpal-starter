@@ -5,6 +5,7 @@ classDiagram
         +List~Pet~ pets
         +addOwnerInformation(name: String, address: String): void
         +addPetInformation(pet: Pet): void
+        +getAllTasks(): List~Task~
     }
 
     class Pet {
@@ -22,23 +23,23 @@ classDiagram
         +int duration
         +int priority
         +Optional~time~ scheduledStart
-        +createTask(name: String, description: String, duration: int, priority: int): Task
+        +String frequency
+        +bool completed
+        +createTask(name: String, description: String, duration: int, priority: int, scheduledStart: Optional~time~, frequency: String, completed: bool): Task
         +editTask(name: String, description: String, duration: int, priority: int): void
         +deleteTask(pet: Pet): void
     }
 
-    class Planner {
+    class Scheduler {
+        +Owner owner
         +List~Task~ dailySchedule
-        +List~String~ constraints
-        +List~String~ priorities
         +String reasoning
         +createDailySchedule(): List~Task~
-        +considerConstraints(): void
-        +considerPriorities(): void
+        +markTaskCompleted(task: Task): void
         +provideReasoning(): String
-        +display(): void
     }
 
     Owner "1" --> "0..*" Pet : owns
     Pet "1" --> "0..*" Task : has care tasks
-    Planner --> "0..*" Task : schedules
+    Scheduler --> Owner : retrieves tasks from
+    Scheduler --> "0..*" Task : schedules
