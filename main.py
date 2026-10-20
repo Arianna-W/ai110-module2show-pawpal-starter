@@ -1,6 +1,7 @@
 from datetime import time
 
 from pawpal_system import Owner, Pet, Scheduler, Task
+from pawpal_formatting import format_priority, format_task_name
 
 
 def main() -> None:
@@ -26,7 +27,7 @@ def main() -> None:
 			description="Walk around the neighborhood",
 			duration=25,
 			priority=3,
-			scheduled_start=time(7, 30),
+			scheduled_start=time(8, 30),
 			frequency="daily",
 		)
 	)
@@ -53,11 +54,18 @@ def main() -> None:
 			for pet_task in pet.tasks
 			if pet_task is task
 		)
-		start_time = task.scheduled_start.strftime("%I:%M %p")
-		print(
-			f"{start_time} | {pet_name} | {task.name}: {task.description} "
-			f"({task.duration} min, priority {task.priority})"
+		start_time = (
+			task.scheduled_start.strftime("%I:%M %p")
+			if task.scheduled_start
+			else "Not scheduled"
 		)
+		print(
+			f"{start_time} | {pet_name} | {format_task_name(task.name)}: "
+			f"{task.description} ({task.duration} min, "
+			f"{format_priority(task.priority_level)})"
+		)
+	print("\nReasoning")
+	print(scheduler.provide_reasoning())
 	if scheduler.conflict_warnings:
 		print("\nWarnings")
 		for warning in scheduler.conflict_warnings:
