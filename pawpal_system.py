@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from datetime import date, time, timedelta
-from typing import List, Optional
+import json
+from pathlib import Path
+from typing import List, Optional, Union
 
 
 @dataclass
@@ -22,6 +24,81 @@ class Owner:
 	def get_all_tasks(self) -> List["Task"]:
 		"""Return the tasks belonging to all of this owner's pets."""
 		return [task for pet in self.pets for task in pet.tasks]
+
+	def save_to_json(self, file_path: Union[str, Path] = "data.json") -> None:
+		"""Save owner, pet, and task data as JSON."""
+		data = {
+			"name": self.name,
+			"address": self.address,
+			"pets": [
+				{
+					"name": pet.name,
+					"age": pet.age,
+					"pet_type": pet.pet_type,
+					"breed": pet.breed,
+					"tasks": [
+						{
+							"name": task.name,
+							"description": task.description,
+							"duration": task.duration,
+							"priority": task.priority,
+							"scheduled_start": (
+								task.scheduled_start.isoformat()
+								if task.scheduled_start
+								else None
+							),
+							"frequency": task.frequency,
+							"completed": task.completed,
+							"due_date": (
+								task.due_date.isoformat() if task.due_date else None
+							),
+						}
+						for task in pet.tasks
+					],
+				}
+				for pet in self.pets
+			],
+		}
+		with Path(file_path).open("w", encoding="utf-8") as json_file:
+			json.dump(data, json_file, indent=2)
+
+	@classmethod
+	def load_from_json(cls, file_path: Union[str, Path] = "data.json") -> "Owner":
+		"""Load an owner, pets, and tasks from a JSON file."""
+		with Path(file_path).open("r", encoding="utf-8") as json_file:
+			data = json.load(json_file)
+
+		owner = cls(name=data["name"], address=data["address"])
+		for pet_data in data["pets"]:
+			pet = Pet(
+				name=pet_data["name"],
+				age=pet_data["age"],
+				pet_type=pet_data["pet_type"],
+				breed=pet_data["breed"],
+			)
+			for task_data in pet_data["tasks"]:
+				pet.add_task(
+					Task.create_task(
+						name=task_data["name"],
+						description=task_data["description"],
+						duration=task_data["duration"],
+						priority=task_data["priority"],
+						scheduled_start=(
+							time.fromisoformat(task_data["scheduled_start"])
+							if task_data["scheduled_start"]
+							else None
+						),
+						frequency=task_data["frequency"],
+						completed=task_data["completed"],
+						due_date=(
+							date.fromisoformat(task_data["due_date"])
+							if task_data["due_date"]
+							else None
+						),
+					)
+				)
+			owner.add_pet_information(pet)
+		return owner
 
 
 @dataclass
@@ -48,6 +125,11 @@ class Task:
 	frequency: str = "once"
 	completed: bool = False
 	due_date: Optional[date] = None
+
+	@property
+	def priority_level(self) -> str:
+		"""Return the user-facing label for this task's numeric priority."""
+		return {1: "Low", 2: "Medium", 3: "High"}.get(self.priority, "Unknown")
 
 	@classmethod
 	def create_task(
@@ -116,18 +198,18 @@ class Scheduler:
 		]
 
 	def sort_by_time(self, tasks: Optional[List[Task]] = None) -> List[Task]:
-		"""Return tasks ordered by scheduled start time.
+		"""Return tasks ordered by descending priority, then scheduled time.
 
-		When tasks are omitted, all owner tasks are sorted. Unscheduled tasks go
-		last, and higher priority comes first when start times are equal.
+		When tasks are omitted, all owner tasks are sorted. Within each priority,
+		unscheduled tasks go last and earlier start times come first.
 		"""
 		tasks_to_sort = self.owner.get_all_tasks() if tasks is None else tasks
 		return sorted(
 			tasks_to_sort,
 			key=lambda task: (
+				-task.priority,
 				task.scheduled_start is None,
 				task.scheduled_start or time.max,
-				-task.priority,
 			),
 		)
 
@@ -152,6 +234,7 @@ class Scheduler:
 				(task, start_seconds, start_seconds + task.duration * 60)
 			)
 
+		intervals.sort(key=lambda interval: interval[1])
 		warnings = []
 		for index, (task, start, end) in enumerate(intervals):
 			for other_task, other_start, other_end in intervals[index + 1 :]:
@@ -178,7 +261,7 @@ class Scheduler:
 		self.conflict_warnings = self.detect_conflicts(self.daily_schedule)
 		self.reasoning = (
 			"Completed tasks are excluded; remaining tasks are ordered by "
-			"scheduled time, then descending priority."
+			"descending priority, then scheduled time."
 		)
 		return list(self.daily_schedule)
 
