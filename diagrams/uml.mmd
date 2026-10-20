@@ -1,10 +1,8 @@
- %% Replace the placeholders below with your actual classes, attributes, methods, and relationships.
- %% Keep this file updated so it matches your final implementation.
-
 classDiagram
     class Owner {
         +String name
         +String address
+        +List~Pet~ pets
         +addOwnerInformation(name: String, address: String): void
         +addPetInformation(pet: Pet): void
     }
@@ -14,6 +12,8 @@ classDiagram
         +int age
         +String petType
         +String breed
+        +List~Task~ tasks
+        +addTask(task: Task): void
     }
 
     class Task {
@@ -21,9 +21,10 @@ classDiagram
         +String description
         +int duration
         +int priority
-        +createTask(): Task
-        +editTask(): void
-        +deleteTask(): void
+        +Optional~time~ scheduledStart
+        +createTask(name: String, description: String, duration: int, priority: int): Task
+        +editTask(name: String, description: String, duration: int, priority: int): void
+        +deleteTask(pet: Pet): void
     }
 
     class Planner {
@@ -38,7 +39,6 @@ classDiagram
         +display(): void
     }
 
-    ClassName --> AnotherClass : relationship
     Owner "1" --> "0..*" Pet : owns
     Pet "1" --> "0..*" Task : has care tasks
     Planner --> "0..*" Task : schedules
