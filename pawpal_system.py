@@ -1,17 +1,21 @@
 from dataclasses import dataclass, field
-from typing import List
+from datetime import time
+from typing import List, Optional
 
 
 @dataclass
 class Owner:
 	name: str
 	address: str
+	pets: List["Pet"] = field(default_factory=list)
 
 	def add_owner_information(self, name: str, address: str) -> None:
-		pass
+		self.name = name
+		self.address = address
 
 	def add_pet_information(self, pet: "Pet") -> None:
-		pass
+		if pet not in self.pets:
+			self.pets.append(pet)
 
 
 @dataclass
@@ -20,6 +24,11 @@ class Pet:
 	age: int
 	pet_type: str
 	breed: str
+	tasks: List["Task"] = field(default_factory=list)
+
+	def add_task(self, task: "Task") -> None:
+		if task not in self.tasks:
+			self.tasks.append(task)
 
 
 @dataclass
@@ -28,16 +37,25 @@ class Task:
 	description: str
 	duration: int
 	priority: int
+	scheduled_start: Optional[time] = None
 
 	@classmethod
-	def create_task(cls) -> "Task":
-		pass
+	def create_task(
+		cls, name: str, description: str, duration: int, priority: int
+	) -> "Task":
+		return cls(name, description, duration, priority)
 
-	def edit_task(self) -> None:
-		pass
+	def edit_task(
+		self, name: str, description: str, duration: int, priority: int
+	) -> None:
+		self.name = name
+		self.description = description
+		self.duration = duration
+		self.priority = priority
 
-	def delete_task(self) -> None:
-		pass
+	def delete_task(self, pet: "Pet") -> None:
+		if self in pet.tasks:
+			pet.tasks.remove(self)
 
 
 @dataclass
@@ -48,7 +66,7 @@ class Planner:
 	reasoning: str = ""
 
 	def create_daily_schedule(self) -> List[Task]:
-		pass
+		return list(self.daily_schedule)
 
 	def consider_constraints(self) -> None:
 		pass
@@ -57,7 +75,7 @@ class Planner:
 		pass
 
 	def provide_reasoning(self) -> str:
-		pass
+		return self.reasoning
 
 	def display(self) -> None:
 		pass
