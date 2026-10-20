@@ -77,11 +77,12 @@ else:
 
 st.markdown("### Schedule a Task")
 if owner.pets:
-    selected_pet = st.selectbox(
+    selected_pet_index = st.selectbox(
         "Pet",
-        owner.pets,
-        format_func=lambda pet: pet.name,
+        range(len(owner.pets)),
+        format_func=lambda index: owner.pets[index].name,
     )
+    selected_pet = owner.pets[selected_pet_index]
     col1, col2, col3 = st.columns(3)
     with col1:
         task_title = st.text_input("Task title", value="Morning walk")
@@ -104,22 +105,45 @@ if owner.pets:
         )
         selected_pet.add_task(task)
         st.session_state["schedule"] = None
+        st.success(f"Added '{task.name}' to {selected_pet.name}'s care tasks.")
 
-    if selected_pet.tasks:
-        st.write(
-            "Current tasks:",
+    scheduler = st.session_state["scheduler"]
+    completion_filter = st.selectbox(
+        "Show tasks",
+        ["All", "To do", "Completed"],
+        key="task_completion_filter",
+    )
+    completed_filter = {
+        "All": None,
+        "To do": False,
+        "Completed": True,
+    }[completion_filter]
+    visible_tasks = scheduler.filter_tasks(
+        completed=completed_filter,
+        pet_name=selected_pet.name,
+    )
+    visible_tasks = scheduler.sort_by_time(visible_tasks)
+
+    if visible_tasks:
+        st.table(
             [
                 {
-                    "title": task.name,
-                    "duration_minutes": task.duration,
-                    "priority": task.priority,
-                    "start_time": task.scheduled_start,
+                    "Care task": task.name,
+                    "Description": task.description or "-",
+                    "Duration (min)": task.duration,
+                    "Priority": task.priority,
+                    "Start time": (
+                        task.scheduled_start.strftime("%I:%M %p").lstrip("0")
+                        if task.scheduled_start
+                        else "Not scheduled"
+                    ),
+                    "Status": "Completed" if task.completed else "To do",
                 }
-                for task in selected_pet.tasks
-            ],
+                for task in visible_tasks
+            ]
         )
     else:
-        st.info("No tasks for this pet yet. Add one above.")
+        st.info(f"No {completion_filter.lower()} tasks for {selected_pet.name}.")
 
 st.divider()
 
@@ -132,21 +156,40 @@ if owner.pets:
     schedule = st.session_state.get("schedule")
     if schedule is not None:
         if schedule:
+            scheduler = st.session_state["scheduler"]
+            if scheduler.conflict_warnings:
+                for warning in scheduler.conflict_warnings:
+                    st.warning(
+                        f"{warning} Adjust one task's start time or duration "
+                        "so both care tasks fit into the day."
+                    )
+            else:
+                st.success("Your schedule is ready with no timing conflicts.")
+
             st.table(
                 [
                     {
-                        "task": task.name,
-                        "duration_minutes": task.duration,
-                        "priority": task.priority,
-                        "start_time": task.scheduled_start,
+                        "Pet": next(
+                            (
+                                pet.name
+                                for pet in owner.pets
+                                if any(pet_task is task for pet_task in pet.tasks)
+                            ),
+                            "Unknown pet",
+                        ),
+                        "Care task": task.name,
+                        "Duration (min)": task.duration,
+                        "Priority": task.priority,
+                        "Start time": (
+                            task.scheduled_start.strftime("%I:%M %p").lstrip("0")
+                            if task.scheduled_start
+                            else "Not scheduled"
+                        ),
                     }
                     for task in schedule
                 ]
             )
-            scheduler = st.session_state["scheduler"]
             st.caption(scheduler.provide_reasoning())
-            for warning in scheduler.conflict_warnings:
-                st.warning(warning)
         else:
             st.info("No care tasks have been added yet.")
 else:
